@@ -1,5 +1,7 @@
 import logging
 import pprint
+import getpass
+import encrypter
 import json
 from datetime import date, timedelta
 from fints.client import FinTS3PinTanClient
@@ -9,13 +11,12 @@ print('Getting transactions...')
 pp = pprint.PrettyPrinter(indent=4)
 logging.basicConfig(level=logging.DEBUG)
 
-with open('credentials.json') as raw:
-    credentials = json.load(raw)["banking"]
+password = getpass.getpass("Your password: ")
 
 client = FinTS3PinTanClient(
     '20050550',  # Bank BLZ
-    credentials["login"], 
-    credentials["pin"],
+    encrypter.decrypt("banking_login", password).decode(), 
+    encrypter.decrypt("banking_pin", password).decode(),
     'https://banking.haspa.de/OnlineBankingFinTS/pintan' # endpoint
 )
 
