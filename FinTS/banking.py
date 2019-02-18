@@ -14,8 +14,8 @@ logging.basicConfig(level=logging.DEBUG)
 password = getpass.getpass("Your password: ")
 
 client = FinTS3PinTanClient(
-    '20050550',  # Bank BLZ
-    encrypter.decrypt("banking_login", password).decode(), 
+    '20050550', # Bank BLZ
+    encrypter.decrypt("banking_login", password).decode(),
     encrypter.decrypt("banking_pin", password).decode(),
     'https://banking.haspa.de/OnlineBankingFinTS/pintan' # endpoint
 )
