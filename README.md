@@ -26,3 +26,9 @@ OUTPUT
 
 Balance: 4.20€
 ```
+
+## Theme Changer
+Toggles active theme of Windows Terminal and Helix editor. Add to `.zshrc` or `.bashrc`:
+```sh
+alias tt="node /.../winTerminalToggleColorMode.js"
+```
