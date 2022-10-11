@@ -1,7 +1,7 @@
 const fs = require("fs")
 const path = require("path")
 
-const settingsPath = "/mnt/c/Users/mniveri/AppData/Local/Packages/Microsoft.WindowsTerminal_8wekyb3d8bbwe/LocalState/settings.json"
+const settingsPath = "/mnt/c/Users/mariu/AppData/Local/Packages/Microsoft.WindowsTerminal_8wekyb3d8bbwe/LocalState/settings.json"
 const hxsettingsPath = "/home/marius/.config/helix/config.toml"
 
 let settings = {}
@@ -32,7 +32,7 @@ fs.readFile(settingsPath, { encoding: "utf-8" }, (err, data) => {
         profile.backgroundImage = null
       } else {
         profile.colorScheme = "Campbell"
-        profile.backgroundImage = "C:\\Users\\mniveri\\OneDrive - Axel Springer SE\\Bilder\\BLACK.png"
+        profile.backgroundImage = ""
       }
     }
   })
