@@ -2,7 +2,7 @@ const https = require("https")
 
 const API_KEY = require("./owm_api_key.js").key
 
-const URL = `https://api.openweathermap.org/data/2.5/weather?lat=53.5510846&lon=9.99368179999999&units=metric&appid=` + API_KEY
+const URL = `https://api.openweathermap.org/data/2.5/weather?lat=53.551086&lon=9.993682&units=metric&appid=` + API_KEY
 
 const ICON_COLOR = "#EE8000"
 
@@ -33,14 +33,57 @@ const request = https.request(URL, response => {
 
     switch (body.weather[0].description) {
       case "clear sky":
-        weatherDescription = colorize(isNight ? randomize(["", ""]) : "")
+        weatherDescription = colorize(isNight ? randomize(["", "", "望"]) : "")
+        break
       case "light rain":
         weatherDescription = colorize(isNight ? "" : "")
+        break
       case "broken clouds":
         weatherDescription = colorize(isNight ? "" : "")
+        break
+      case "scattered clouds":
+        weatherDescription = colorize(isNight ? "" : "")
+        break
+      case "light intensity drizzle rain":
+        weatherDescription = colorize(isNight ? "" : randomize(["", "", ""]))
+        break
+      case "light intensity drizzle":
+        weatherDescription = colorize(isNight ? "" : randomize(["", "", ""]))
+        break
+      case "light intensity shower rain":
+        weatherDescription = colorize(isNight ? "" : randomize(["", "", ""]))
+        break
+      case "few clouds":
+        weatherDescription = colorize(isNight ? "" : "")
+        break
+      case "overcast clouds":
+        weatherDescription = colorize("")
+        break
+      case "fog":
+        weatherDescription = colorize(isNight ? "" : "")
+        break
+      case "mist":
+        weatherDescription = colorize(isNight ? "" : "")
+        break
+      case "moderate rain":
+        weatherDescription = colorize("")
+        break
+      case "snow":
+        weatherDescription = colorize("")
+        break
+      case "light snow":
+        weatherDescription = colorize("流")
+        break
+      case "shower rain":
+        weatherDescription = colorize(" ")
+        break
     }
 
-    console.log(`${weatherDescription} ${body.main.temp}°C`)
+    if (Math.floor(Math.random() * 10 ** 100) == 420) {
+      weather = colorize("")
+    }
+
+    console.log(`${weatherDescription} ${Math.round(body.main.feels_like)}°C`)
   })
 })
 

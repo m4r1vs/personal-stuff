@@ -25,6 +25,7 @@ statement = client.get_statement(accounts[0], date.today() - timedelta(90), date
 balance = client.get_balance(accounts[0])
 
 print('\n\nGot transactions from SEPA Account:', accounts)
+print('h')
 
 for transaction in statement:
     print('\n\n=============================')

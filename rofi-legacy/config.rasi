@@ -10,14 +10,12 @@ configuration {
 	show-icons: true;
 		icon-theme: "Papirus";
 	location: 0;
-	/* font: "JetBrainsMono Nerd Font 14";	 */
-  font: "Ubuntu 14";
-	display-drun: "Starte:";
-  display-calculator: "Ask Totoro:";
+	font: "JetBrainsMono Nerd Font 12";	
+	display-drun: "Launch:";
 }
 
 window { 
-	width: 900px;
+	width: 35%;
 	transparency: "real";
 	orientation: vertical;
 	border-color: #74adc0;
@@ -37,8 +35,7 @@ element {
 }
 
 element selected {
-	/* background-color: #74adc0; */
-  background-color: #4f7334;
+	background-color: #74adc0;
 }
 
 element-text {
@@ -47,7 +44,7 @@ element-text {
 }
 
 element-icon {
-	size: 24 px;
+	size: 16 px;
 	background-color: inherit;
 	padding: 0 6 0 0;
 	alignment: vertical;
@@ -73,8 +70,8 @@ entry {
 }
 
 inputbar {
-	background-image: url("~/.config/rofi/arch-central-park.png", width);
-	padding: 218 0 0;
+	background-image: url("~/.config/rofi/rofi-marius.png", width);
+	padding: 180 0 0;
 	margin: 0 0 0 0;
 } 
 

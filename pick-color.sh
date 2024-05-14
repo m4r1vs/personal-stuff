@@ -1,7 +1,7 @@
 #!/bin/sh
 
-sleep 0.4
-color=$(colorpicker --preview --short --one-shot)
+sleep 0.25
+color=$(/home/$USER/.cargo/bin/xcolor)
 output=$(echo ${color%????????})
 
 if [ "${output:0:1}" == "#" ]; then
