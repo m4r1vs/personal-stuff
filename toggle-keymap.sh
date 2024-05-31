@@ -9,4 +9,3 @@ else
   notify-send "German keyboard layout" -i /usr/share/icons/Papirus/48x48/categories/preferences-desktop-keyboard-shortcuts.svg
   setxkbmap -layout de
 fi
-
