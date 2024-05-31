@@ -33,7 +33,7 @@ const request = https.request(URL, response => {
 
     switch (body.weather[0].description) {
       case "clear sky":
-        weatherDescription = colorize(isNight ? randomize(["", "", "望"]) : "")
+        weatherDescription = colorize(isNight ? randomize(["", "", "󰖔"]) : "")
         break
       case "light rain":
         weatherDescription = colorize(isNight ? "" : "")
@@ -45,13 +45,13 @@ const request = https.request(URL, response => {
         weatherDescription = colorize(isNight ? "" : "")
         break
       case "light intensity drizzle rain":
-        weatherDescription = colorize(isNight ? "" : randomize(["", "", ""]))
+        weatherDescription = colorize(isNight ? "" : "")
         break
       case "light intensity drizzle":
-        weatherDescription = colorize(isNight ? "" : randomize(["", "", ""]))
+        weatherDescription = colorize(isNight ? "" : "")
         break
       case "light intensity shower rain":
-        weatherDescription = colorize(isNight ? "" : randomize(["", "", ""]))
+        weatherDescription = colorize(isNight ? "" : "")
         break
       case "few clouds":
         weatherDescription = colorize(isNight ? "" : "")
@@ -72,10 +72,10 @@ const request = https.request(URL, response => {
         weatherDescription = colorize("")
         break
       case "light snow":
-        weatherDescription = colorize("流")
+        weatherDescription = colorize("󰼶")
         break
       case "shower rain":
-        weatherDescription = colorize(" ")
+        weatherDescription = colorize("")
         break
     }
 
@@ -83,7 +83,7 @@ const request = https.request(URL, response => {
       weather = colorize("")
     }
 
-    console.log(`${weatherDescription} ${Math.round(body.main.feels_like)}°C`)
+    console.log(`${weatherDescription}${Math.round(body.main.feels_like)}°C`)
   })
 })
 
