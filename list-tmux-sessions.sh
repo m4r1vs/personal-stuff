@@ -23,11 +23,20 @@ while read -r session; do
     pane_title=$(tmux display-message -t $clean_session_id:$window_id -p "#{pane_title}" | sed "s|^/home/$USER|~|")
 
     if [[ "$pane_title" == "marius-thinkpad" ]]; then
-      pane_title="$window_name"
-      pane_path=" @ $pane_path"
+      if [[ "$window_name" == "zsh" ]]; then
+        pane_title=""
+        pane_path="<span> </span> $pane_path"
+      else
+        pane_title="$window_name"
+        pane_path=" @ $pane_path"
+      fi
     else
       pane_path=""
-      pane_title=$(echo $pane_title | sed "s/- NVIM/- /g")
+
+      if [[ $pane_title == *"- NVIM" ]]; then
+        pane_title=$(echo $pane_title | sed "s/- NVIM//")
+        pane_title="<span font='JetBrainsMono Nerd Font 13'> </span> $pane_title"
+      fi
     fi
 
     pane_titles=""
@@ -47,11 +56,20 @@ while read -r session; do
         pane_cmd=$(echo "$pane_info" | awk -F: '{print $3}')
 
         if [[ "$pane_title" == "marius-thinkpad" ]]; then
-          pane_title="$pane_cmd"
-          pane_path=" @ $pane_path"
+          if [[ "$pane_cmd" == "zsh" ]]; then
+            pane_title=""
+            pane_path="<span> </span> $pane_path"
+          else
+            pane_title="$pane_cmd"
+            pane_path=" @ $pane_path"
+          fi
         else
           pane_path=""
-          pane_title=$(echo $pane_title | sed "s/- NVIM/- /g")
+
+          if [[ $pane_title == *"- NVIM" ]]; then
+            pane_title=$(echo $pane_title | sed "s/- NVIM//")
+            pane_title="<span font='JetBrainsMono Nerd Font 13'> </span> $pane_title"
+          fi
         fi
 
         # Append pane title and path
@@ -63,9 +81,9 @@ while read -r session; do
     # Check if this is the current session
     if [[ "$clean_session_id" == "$current_session" ]]; then
       # Highlight the current session
-      output+="<span color='#ee8000'>$result</span><br/>"
+      output+="<span color='#ee8000'>$(echo $result | sed 's/ / /g')</span><br/>"
     else
-      output+="<span color='#008e2f'>$result</span><br/>"
+      output+="<span color='#008e2f'>$(echo $result)</span><br/>"
     fi
   done < <(tmux list-windows -t "$session" -F '#{session_id}:#{window_name}')
 done < <(tmux list-sessions -F '#S')
