@@ -60,20 +60,6 @@ void set_tmux_session_id() {
   current_session = strtol(result, NULL, 10);
 }
 
-void replace_home_with_tilde(char *path) {
-  char *home = "/home/mn";
-
-  char *pos = strstr(path, home);
-  if (pos) {
-    char result[1024];
-    snprintf(result, pos - path + 1, "%s",
-             path); // Copy part before /home/username/
-    snprintf(result + (pos - path), sizeof(result) - (pos - path), "~%s",
-             pos + strlen(home));
-    strcpy(path, result);
-  }
-}
-
 int replace_string(char *str, const char *search, const char *replace) {
   char buffer[MAX_BUFFER];
   char *pos;
@@ -116,6 +102,7 @@ void set_output_string(struct tmux_session session, char *pane_path,
     replace_string(pane_path, "/home/mn", "~");
     if (replace_string(app_title, "zsh", folder_icon) == 0) {
       strcat(app_title, " @ ");
+      replace_string(app_title, "lazygit @ ", "󰊢 ");
     }
   } else {
     pane_path = "";
