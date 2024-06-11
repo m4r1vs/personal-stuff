@@ -7,6 +7,10 @@
 #define MAX_WINDOWS 24
 #define MAX_PANES 8
 #define MAX_BUFFER 2048
+#define ACTIVE_COLOR "#ee8000"
+#define INACTIVE_COLOR "#008e2f"
+#define DELIM "<span color='#6e767e'>󰇙</span>"
+#define COMPUTER_NAME "marius-thinkpad"
 
 char *output[MAX_SESSIONS];
 int current_session = 0;
@@ -45,7 +49,6 @@ int run_command(const char *command, char *output, size_t maxlen) {
   return 0;
 }
 
-// Function to set the current tmux session ID
 void set_tmux_session_id() {
   static char result[MAX_BUFFER];
   const char *command = "tmux display-message -p '#S'";
@@ -57,19 +60,75 @@ void set_tmux_session_id() {
   current_session = strtol(result, NULL, 10);
 }
 
-void set_output_string(struct tmux_session session, char *pane_path,
-                       char *pane_title, char *pane_cmd) {
+void replace_home_with_tilde(char *path) {
+  char *home = "/home/mn";
 
-  char *color = (session.id == current_session) ? "#ffffff" : "#000000";
+  char *pos = strstr(path, home);
+  if (pos) {
+    char result[1024];
+    snprintf(result, pos - path + 1, "%s",
+             path); // Copy part before /home/username/
+    snprintf(result + (pos - path), sizeof(result) - (pos - path), "~%s",
+             pos + strlen(home));
+    strcpy(path, result);
+  }
+}
+
+int replace_string(char *str, const char *search, const char *replace) {
+  char buffer[MAX_BUFFER];
+  char *pos;
+  int search_len = strlen(search);
+  int replace_len = strlen(replace);
+  int replaced = 0;
+
+  buffer[0] = '\0';
+
+  char *current_pos = str;
+
+  while ((pos = strstr(current_pos, search)) != NULL) {
+    strncat(buffer, current_pos, pos - current_pos);
+    strcat(buffer, replace);
+    current_pos = pos + search_len;
+    replaced = 1;
+  }
+
+  strcat(buffer, current_pos);
+  strcpy(str, buffer);
+
+  return replaced;
+}
+
+void set_output_string(struct tmux_session session, char *pane_path,
+                       char *pane_title, char *pane_cmd, int pane_index) {
+
+  char *color = (session.id == current_session) ? ACTIVE_COLOR : INACTIVE_COLOR;
 
   char pane_output_string[MAX_BUFFER];
 
-  snprintf(pane_output_string, sizeof(pane_output_string),
-           "<span foreground='%s'>Session: %d, Pane: %s, Title: %s, Command: "
-           "%s</span>\n",
-           color, session.id, pane_path, pane_title, pane_cmd);
+  char *delim = (pane_index == 1) ? "" : DELIM;
+  char *app_title = pane_title;
+  char *app_icon = "";
 
-  output[session.local_id] = pane_output_string;
+  char *folder_icon = (session.id == current_session) ? " " : " ";
+
+  if (strcmp(app_title, COMPUTER_NAME) == 0) {
+    app_title = pane_cmd;
+    replace_string(pane_path, "/home/mn", "~");
+    if (replace_string(app_title, "zsh", folder_icon) == 0) {
+      strcat(app_title, " @ ");
+    }
+  } else {
+    pane_path = "";
+    if (replace_string(app_title, " - NVIM", "") == 1) {
+      app_icon = " ";
+    }
+  }
+
+  snprintf(pane_output_string, sizeof(pane_output_string),
+           "%s<span color=\"%s\">%s%s%s</span>", delim, color, app_icon,
+           app_title, pane_path);
+
+  strcat(output[session.local_id], pane_output_string);
 }
 
 void set_tmux_panes(struct tmux_session session, int window_id) {
@@ -82,7 +141,7 @@ void set_tmux_panes(struct tmux_session session, int window_id) {
 
   snprintf(command, sizeof(command),
            "tmux list-panes -t %d:%d -F "
-           "'#{pane_current_path};#{pane_current_command};#{pane_title}'",
+           "'#{pane_current_path};#{pane_current_command};#{pane_title};#P'",
            session.id, window_id);
 
   FILE *fp;
@@ -104,11 +163,14 @@ void set_tmux_panes(struct tmux_session session, int window_id) {
     char *pane_path = strtok(panes[j], ";");
     char *pane_cmd = strtok(NULL, ";");
     char *pane_title = strtok(NULL, ";");
+    int pane_index = strtol(strtok(NULL, ";"), NULL, 10);
 
-    set_output_string(session, pane_path, pane_title, pane_cmd);
+    set_output_string(session, pane_path, pane_title, pane_cmd, pane_index);
 
     free(panes[j]);
   }
+
+  strcat(output[session.local_id], "<br />");
 
   return;
 }
@@ -180,6 +242,10 @@ void set_tmux_sessions() {
   for (int j = 0; j < i; j++) {
     pthread_join(threads[j], NULL);
     printf("%s", output[j]);
+  }
+
+  for (int j = 0; j < i; j++) {
+    free(output[j]);
   }
 
   free(sessions);
