@@ -97,7 +97,7 @@ void set_output_string(struct tmux_session session, char *pane_path,
 
   char *folder_icon = (session.id == current_session) ? " " : " ";
 
-  if (strcmp(app_title, COMPUTER_NAME) == 0) {
+  if (strcmp(app_title, HOSTNAME) == 0) {
     app_title = pane_cmd;
     replace_string(pane_path, "/home/mn", "~");
     if (replace_string(app_title, "zsh", folder_icon) == 0) {
