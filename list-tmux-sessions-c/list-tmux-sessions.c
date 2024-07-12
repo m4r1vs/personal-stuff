@@ -6,13 +6,13 @@
 #define MAX_SESSIONS 24
 #define MAX_WINDOWS 24
 #define MAX_PANES 8
-#define MAX_BUFFER 2048
+#define MAX_BUFFER 1024
 #define ACTIVE_COLOR "#ee8000"
 #define INACTIVE_COLOR "#008e2f"
 #define DELIM "<span color='#6e767e'>󰇙</span>"
 #define COMPUTER_NAME "marius-thinkpad"
 
-char *output[MAX_SESSIONS];
+char *output[MAX_SESSIONS * MAX_WINDOWS];
 int current_session = 0;
 
 struct tmux_session {
@@ -190,7 +190,7 @@ void *print_tmux_windows(void *args) {
 
   for (int j = 0; j < i; j++) {
     set_tmux_panes(*session, strtol(windows[j], NULL, 10));
-    free(windows[i]);
+    free(windows[j]);
   }
 
   return NULL;
@@ -212,7 +212,7 @@ void set_tmux_sessions() {
   }
 
   while (fgets(path, sizeof(path) - 1, fp) != NULL) {
-    sessions[i].id = strtol(strdup(path), NULL, 10);
+    sessions[i].id = strtol(path, NULL, 10);
     sessions[i].local_id = i;
     output[i] = malloc(MAX_BUFFER * sizeof(char) * MAX_PANES);
     i++;
