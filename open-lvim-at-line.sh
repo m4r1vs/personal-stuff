@@ -48,20 +48,12 @@ else
   LVIM_CMD="lvim +$LINE $FILE"
 fi
 
-# echo "$LVIM_CMD" | xclip -selection clipboard
+# somehow on my machine, the PATH is not set correctly when the script is run from alacritty
+PATH=~/.local/bin:$PATH
 
 # Send command to tmux to open a new pane with lvim at the specified line
-TMUX_CMD="tmux split-window -h \"$LVIM_CMD\""
-
-echo "$TMUX_CMD" | xclip -selection clipboard
-
-# attach to current tmux session
 tmux split-window -h "$LVIM_CMD"
 
-# paste the command to the terminal and run it
-# xdotool key ctrl+shift+v
-# xdotool key Return
-
 # Switch to the new pane automatically
-# tmux last-pane
-# tmux select-pane -R
+tmux last-pane
+tmux select-pane -R
