@@ -64,7 +64,6 @@ int replace_string(char *str, const char *search, const char *replace) {
   char buffer[MAX_BUFFER];
   char *pos;
   int search_len = strlen(search);
-  int replace_len = strlen(replace);
   int replaced = 0;
 
   buffer[0] = '\0';
