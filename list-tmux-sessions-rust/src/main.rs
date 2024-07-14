@@ -1,10 +1,8 @@
 use std::process::Command;
-
 use std::str;
 use std::sync::{Arc, Mutex};
 use std::thread;
 
-const MAX_SESSIONS: usize = 12;
 const ACTIVE_COLOR: &str = "#ee8000";
 const INACTIVE_COLOR: &str = "#008e2f";
 const DELIM: &str = "<span color='#6e767e'> 󰇙 </span>";
@@ -15,6 +13,7 @@ struct TmuxSession {
     local_id: usize,
 }
 
+// Run a shell command and return the output
 fn run_command(command: &str) -> Result<String, String> {
     let output = Command::new("sh")
         .arg("-c")
@@ -29,20 +28,28 @@ fn run_command(command: &str) -> Result<String, String> {
     Ok(String::from_utf8_lossy(&output.stdout).trim().to_string())
 }
 
+// Get the current tmux session ID. Unsafe is needed because we're using a static variable.
 fn set_tmux_session_id() -> Result<i32, String> {
-    let result = run_command("tmux display-message -p '#S'")?;
-    result.parse::<i32>().map_err(|e| e.to_string())
+    static mut CURRENT_SESSION_ID: Option<i32> = None;
+    unsafe {
+        if CURRENT_SESSION_ID.is_none() {
+            let result = run_command("tmux display-message -p '#S'")?;
+            CURRENT_SESSION_ID = Some(result.parse::<i32>().map_err(|e| e.to_string())?);
+        }
+        CURRENT_SESSION_ID.ok_or_else(|| "Session ID not set".to_string())
+    }
 }
 
+// Set the output string for each pane
 fn set_output_string(
     session: &TmuxSession,
     pane_path: &str,
     pane_title: &str,
     pane_cmd: &str,
     pane_index: usize,
-    output: &mut Vec<String>,
+    output: &Mutex<Vec<String>>,
 ) {
-    let color = if session.id == current_session_id() {
+    let color = if session.id == set_tmux_session_id().unwrap() {
         ACTIVE_COLOR
     } else {
         INACTIVE_COLOR
@@ -57,23 +64,23 @@ fn set_output_string(
     // Check if pane title is the hostname, if so use pane_cmd
     if pane_title == COMPUTER_NAME {
         app_title = pane_cmd.to_string();
-        modified_pane_path = replace_string(&modified_pane_path, "/home/mn", "~");
+        modified_pane_path = modified_pane_path.replace("/home/mn", "~");
 
-        let folder_icon = if session.id == current_session_id() {
+        let folder_icon = if session.id == set_tmux_session_id().unwrap() {
             " "
         } else {
             " "
         };
         if !app_title.contains("zsh") {
             app_title = format!("{} @ ", app_title);
-            app_title = replace_string(&app_title, "lazygit @ ", "󰊢 ");
+            app_title = app_title.replace("lazygit @ ", "󰊢 ");
         } else {
-            app_title = replace_string(&app_title, "zsh", folder_icon);
+            app_title = app_title.replace("zsh", folder_icon);
         }
     } else {
         modified_pane_path = "".to_string();
         if app_title.contains(" - NVIM") {
-            app_title = replace_string(&app_title, " - NVIM", "");
+            app_title = app_title.replace(" - NVIM", "");
             app_icon = " ".to_string();
         }
     }
@@ -83,15 +90,11 @@ fn set_output_string(
         delim, color, app_icon, app_title, modified_pane_path
     );
 
-    output[session.local_id].push_str(&output_string);
+    output.lock().unwrap()[session.local_id].push_str(&output_string);
 }
 
-fn replace_string(original: &str, search: &str, replace: &str) -> String {
-    original.replace(search, replace)
-}
-
-fn set_tmux_panes(session: &TmuxSession, window_id: i32, output: &mut Vec<String>) {
-    // Double braces are used to escape the curly braces so they appear in the output string
+// Iterate over all panes in the given session and run set_output_string for each
+fn set_tmux_panes(session: &TmuxSession, window_id: i32, output: &Arc<Mutex<Vec<String>>>) {
     let command = format!(
         "tmux list-panes -t {}:{} -F '#{{pane_current_path}};#{{pane_current_command}};#{{pane_title}};#P'",
         session.id, window_id
@@ -108,34 +111,39 @@ fn set_tmux_panes(session: &TmuxSession, window_id: i32, output: &mut Vec<String
             }
         }
     }
-    output[session.local_id].push_str("<br />");
+    output.lock().unwrap()[session.local_id].push_str("<br />");
 }
 
+// Get all tmux sessions and their panes
 fn set_tmux_sessions() -> Vec<String> {
     let sessions_output = run_command("tmux ls -F '#S'").unwrap();
     let session_ids: Vec<i32> = sessions_output
         .split('\n')
-        .map(|s| s.parse().unwrap())
+        .filter_map(|s| s.parse().ok())
         .collect();
 
-    let output = Arc::new(Mutex::new(vec![String::new(); MAX_SESSIONS]));
+    let output = Arc::new(Mutex::new(Vec::new()));
+    output
+        .lock()
+        .unwrap()
+        .resize(session_ids.len(), String::new());
 
     let handles: Vec<_> = session_ids
         .iter()
         .enumerate()
         .map(|(local_id, &id)| {
-            let output = Arc::clone(&output);
+            let output_clone = Arc::clone(&output);
             thread::spawn(move || {
                 let session = TmuxSession { id, local_id };
                 let windows_output =
                     run_command(&format!("tmux list-windows -t {} -F '#I'", id)).unwrap();
                 let window_ids: Vec<i32> = windows_output
                     .split('\n')
-                    .map(|w| w.parse().unwrap())
+                    .filter_map(|w| w.parse().ok())
                     .collect();
 
                 for window_id in window_ids {
-                    set_tmux_panes(&session, window_id, &mut output.lock().unwrap());
+                    set_tmux_panes(&session, window_id, &output_clone);
                 }
             })
         })
@@ -146,10 +154,6 @@ fn set_tmux_sessions() -> Vec<String> {
     }
 
     Arc::try_unwrap(output).unwrap().into_inner().unwrap()
-}
-
-fn current_session_id() -> i32 {
-    set_tmux_session_id().unwrap()
 }
 
 fn main() {
