@@ -28,7 +28,7 @@ fn run_command(command: &str) -> Result<String, String> {
     Ok(String::from_utf8_lossy(&output.stdout).trim().to_string())
 }
 
-// Get the current tmux session ID. Unsafe is needed because we're using a static variable.
+// Get the current tmux session ID and cache it. Unsafe is needed because we're using a static variable.
 fn set_tmux_session_id() -> Result<i32, String> {
     static mut CURRENT_SESSION_ID: Option<i32> = None;
     unsafe {
@@ -61,7 +61,8 @@ fn set_output_string(
 
     let mut modified_pane_path = pane_path.to_string();
 
-    // Check if pane title is the hostname, if so use pane_cmd
+    // Check if pane title is the hostname, if not, we have a program that dynamically set the
+    // title of the window.
     if pane_title == COMPUTER_NAME {
         app_title = pane_cmd.to_string();
         modified_pane_path = modified_pane_path.replace("/home/mn", "~");
@@ -71,6 +72,8 @@ fn set_output_string(
         } else {
             " "
         };
+
+        // We don't need to know we're running zsh, replace it with folder icon
         if !app_title.contains("zsh") {
             app_title = format!("{} @ ", app_title);
             app_title = app_title.replace("lazygit @ ", "󰊢 ");
@@ -114,7 +117,9 @@ fn set_tmux_panes(session: &TmuxSession, window_id: i32, output: &Arc<Mutex<Vec<
     output.lock().unwrap()[session.local_id].push_str("<br />");
 }
 
-// Get all tmux sessions and their panes
+// Spawn a thread for each tmux session to get its windows and panes.
+// Attach a local_id so the order of output strings is kept even when one thread is faster than
+// another.
 fn set_tmux_sessions() -> Vec<String> {
     let sessions_output = run_command("tmux ls -F '#S'").unwrap();
     let session_ids: Vec<i32> = sessions_output
