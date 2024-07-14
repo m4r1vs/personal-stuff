@@ -6,7 +6,7 @@ use std::thread;
 const ACTIVE_COLOR: &str = "#ee8000";
 const INACTIVE_COLOR: &str = "#008e2f";
 const DELIM: &str = "<span color='#6e767e'> 󰇙 </span>";
-const COMPUTER_NAME: &str = env!("COMPUTER_NAME");
+const HOSTNAME: &str = env!("COMPUTER_NAME");
 
 struct TmuxSession {
     id: i32,
@@ -29,7 +29,7 @@ fn run_command(command: &str) -> Result<String, String> {
 }
 
 // Get the current tmux session ID and cache it. Unsafe is needed because we're using a static variable.
-fn set_tmux_session_id() -> Result<i32, String> {
+fn get_tmux_session_id() -> Result<i32, String> {
     static mut CURRENT_SESSION_ID: Option<i32> = None;
     unsafe {
         if CURRENT_SESSION_ID.is_none() {
@@ -49,7 +49,7 @@ fn set_output_string(
     pane_index: usize,
     output: &Mutex<Vec<String>>,
 ) {
-    let color = if session.id == set_tmux_session_id().unwrap() {
+    let color = if session.id == get_tmux_session_id().unwrap() {
         ACTIVE_COLOR
     } else {
         INACTIVE_COLOR
@@ -63,11 +63,11 @@ fn set_output_string(
 
     // Check if pane title is the hostname, if not, we have a program that dynamically set the
     // title of the window.
-    if pane_title == COMPUTER_NAME {
+    if pane_title == HOSTNAME {
         app_title = pane_cmd.to_string();
         modified_pane_path = modified_pane_path.replace("/home/mn", "~");
 
-        let folder_icon = if session.id == set_tmux_session_id().unwrap() {
+        let folder_icon = if session.id == get_tmux_session_id().unwrap() {
             " "
         } else {
             " "
@@ -76,7 +76,7 @@ fn set_output_string(
         // We don't need to know we're running zsh, replace it with folder icon
         if !app_title.contains("zsh") {
             app_title = format!("{} @ ", app_title);
-            app_title = app_title.replace("lazygit @ ", "󰊢 ");
+            app_title = app_title.replace("lazygit @ ", "󰊢  ");
         } else {
             app_title = app_title.replace("zsh", folder_icon);
         }
@@ -162,7 +162,7 @@ fn set_tmux_sessions() -> Vec<String> {
 }
 
 fn main() {
-    let _ = set_tmux_session_id();
+    let _ = get_tmux_session_id();
     let outputs = set_tmux_sessions();
     for output in outputs {
         println!("{}", output);
