@@ -47,14 +47,9 @@ fn set_output_string(
     pane_title: &str,
     pane_cmd: &str,
     pane_index: usize,
+    color: &str,
     output: &Mutex<Vec<String>>,
 ) {
-    let color = if session.id == get_tmux_session_id().unwrap() {
-        ACTIVE_COLOR
-    } else {
-        INACTIVE_COLOR
-    };
-
     let delim = if pane_index == 1 { "" } else { DELIM };
     let mut app_title = pane_title.to_string();
     let mut app_icon = "".to_string();
@@ -102,6 +97,13 @@ fn set_tmux_panes(session: &TmuxSession, window_id: i32, output: &Arc<Mutex<Vec<
         "tmux list-panes -t {}:{} -F '#{{pane_current_path}};#{{pane_current_command}};#{{pane_title}};#P'",
         session.id, window_id
     );
+
+    let color = if session.id == get_tmux_session_id().unwrap() {
+        ACTIVE_COLOR
+    } else {
+        INACTIVE_COLOR
+    };
+
     if let Ok(panes_output) = run_command(&command) {
         let panes: Vec<&str> = panes_output.split('\n').collect();
         for (_pane_index, pane) in panes.iter().enumerate() {
@@ -110,7 +112,9 @@ fn set_tmux_panes(session: &TmuxSession, window_id: i32, output: &Arc<Mutex<Vec<
                 let (pane_path, pane_cmd, pane_title, pane_index_str) =
                     (details[0], details[1], details[2], details[3]);
                 let pane_index = pane_index_str.parse::<usize>().unwrap_or(0);
-                set_output_string(session, pane_path, pane_title, pane_cmd, pane_index, output);
+                set_output_string(
+                    session, pane_path, pane_title, pane_cmd, pane_index, color, output,
+                );
             }
         }
     }
