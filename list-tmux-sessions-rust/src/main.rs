@@ -60,6 +60,8 @@ fn set_output_string(
     // title of the window.
     if pane_title == HOSTNAME {
         app_title = pane_cmd.to_string();
+
+        //TODO: replace home path with env variable at compile time
         modified_pane_path = modified_pane_path.replace("/home/mn", "~");
 
         let folder_icon = if session.id == get_tmux_session_id().unwrap() {
@@ -69,6 +71,7 @@ fn set_output_string(
         };
 
         // We don't need to know we're running zsh, replace it with folder icon
+        // TODO: replace zsh with current shell at compile time
         if !app_title.contains("zsh") {
             app_title = format!("{} @ ", app_title);
             app_title = app_title.replace("lazygit @ ", "󰊢  ");
