@@ -58,7 +58,8 @@ fn set_output_string(
 
     // Check if pane title is the hostname, if not, we have a program that dynamically set the
     // title of the window.
-    if pane_title == HOSTNAME {
+
+    if pane_title == HOSTNAME || pane_title == "" {
         app_title = pane_cmd.to_string();
 
         //TODO: replace home path with env variable at compile time
