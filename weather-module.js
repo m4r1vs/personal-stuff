@@ -77,6 +77,9 @@ const request = https.request(URL, response => {
       case "shower rain":
         weatherDescription = colorize("")
         break
+      case "thunderstorm with heavy rain":
+        weatherDescription = colorize("")
+        break
     }
 
     if (Math.floor(Math.random() * 10 ** 100) == 420) {
