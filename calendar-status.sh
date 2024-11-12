@@ -10,7 +10,7 @@ current_time=$(date +'%Y-%m-%dT%H:%M:%S')
 end_time=$(date -d "$current_time 1 hour" +'%Y-%m-%dT%H:%M:%S')
 
 # Run gcalcli and capture its output
-agenda_output=$(gcalcli agenda "$current_time" "$end_time" --details calendar --tsv --calendar mniveri@cc.systems)
+agenda_output=$(gcalcli agenda "$current_time" "$end_time" --details calendar --tsv --calendar --nostarted mniveri@cc.systems)
 
 # Check if the output contains the target string
 if echo "$agenda_output" | grep -q "mniveri@cc.systems"; then

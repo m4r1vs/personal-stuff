@@ -77,7 +77,13 @@ const request = https.request(URL, response => {
       case "shower rain":
         weatherDescription = colorize("")
         break
+      case "heavy intensity rain":
+        weatherDescription = colorize("")
+        break
       case "thunderstorm with heavy rain":
+        weatherDescription = colorize("")
+        break
+      case "tunderstorm with rain":
         weatherDescription = colorize("")
         break
     }
