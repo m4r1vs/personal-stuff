@@ -19,7 +19,13 @@ const addIDtoRSSfile = id => {
 }
 
 const parseHTML = html => {
-  let htmlSplit = html.split(`<meta itemprop="channelId" content="`)[1]
+  let htmlSplit = html.split('<meta itemprop="channelId" content="')[1] || html.split('<link rel="alternate" type="application/rss xml" title="RSS" href=')[1];
+
+  if (!htmlSplit) {
+    console.error("No channel ID found in HTML");
+    return;
+  }
+
   htmlSplit = htmlSplit.split(`"`)[0]
   addIDtoRSSfile(htmlSplit)
 }
