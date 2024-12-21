@@ -59,7 +59,7 @@ fn set_output_string(
     // Check if pane title is the hostname, if not, we have a program that dynamically set the
     // title of the window.
 
-    if pane_title == HOSTNAME || pane_title == "" {
+    if pane_title == HOSTNAME || pane_title.is_empty() {
         app_title = pane_cmd.to_string();
 
         //TODO: replace home path with env variable at compile time
@@ -110,7 +110,7 @@ fn set_tmux_panes(session: &TmuxSession, window_id: i32, output: &Arc<Mutex<Vec<
 
     if let Ok(panes_output) = run_command(&command) {
         let panes: Vec<&str> = panes_output.split('\n').collect();
-        for (_pane_index, pane) in panes.iter().enumerate() {
+        for pane in panes.iter() {
             let details: Vec<&str> = pane.split(';').collect();
             if details.len() == 4 {
                 let (pane_path, pane_cmd, pane_title, pane_index_str) =
