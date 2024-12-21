@@ -2,6 +2,36 @@ import fs from "fs";
 import { $ } from "bun";
 import OpenAI from "openai";
 import type { AssistantStream } from "openai/lib/AssistantStream.mjs";
+import path from "path";
+
+// Path to the file
+const filePath = path.resolve(
+  "/home/mn/code/personal-stuff/totoro/thread_id.string",
+);
+
+// Read the file
+function readThreadId() {
+  try {
+    // Read the file contents
+    const data = fs.readFileSync(filePath, "utf-8").trim();
+    // Return undefined if the file is empty
+    return data === "" ? undefined : data;
+  } catch (err) {
+    return undefined;
+  }
+}
+
+async function saveThreadId() {
+  const threadId = (await client.beta.threads.create()).id;
+
+  try {
+    // Write the thread ID to the file
+    fs.writeFileSync(filePath, threadId, { encoding: "utf-8" });
+    return threadId;
+  } catch (err) {
+    throw err;
+  }
+}
 
 const callWolframAlpha = async (args: string) => {
   // RESPONSE=$(curl -s "https://api.wolframalpha.com/v1/result?appid=$APPID&units=metric&" --data-urlencode "i=$*")
@@ -40,9 +70,11 @@ const getMessageFromArgs = () => {
 
 const PROMPT = getMessageFromArgs();
 
+let thread_id = readThreadId() || (await saveThreadId());
+
 // const thread_id = (await client.beta.threads.create()).id;
 // console.log(thread_id);
-const thread_id = "thread_kAKXPeKCRAGGMvIrHyEHZ6Zn";
+// const thread_id = "thread_QgmYdjFIXZZeuqQFdg08OitH";
 
 const runs = await client.beta.threads.runs.list(thread_id);
 
@@ -139,6 +171,21 @@ stream.on("toolCallDone", async (data) => {
         ],
       }),
     );
+  } else if (data.function.name === "insert_content") {
+    const content = JSON.parse(data.function.arguments).content;
+
+    await $`wtype ${content}`;
+
+    handleMessage(
+      client.beta.threads.runs.submitToolOutputsStream(thread_id, run.id, {
+        tool_outputs: [
+          {
+            output: "Inhalt eingefügt",
+            tool_call_id: data.id,
+          },
+        ],
+      }),
+    );
   } else if (
     data.function.name === "terminal_befehl" ||
     data.function.name === "paste_command"
@@ -209,16 +256,19 @@ stream.on("toolCallDone", async (data) => {
       }),
     );
   } else if (data.function.name === "speichern") {
-    const note_title: string = JSON.parse(data.function.arguments).note_title;
-    const content: string = JSON.parse(data.function.arguments).content;
+    const note_title: string = JSON.parse(data.function.arguments).titel;
+    const content: string = JSON.parse(data.function.arguments).inhalt;
     const tags: string[] = JSON.parse(data.function.arguments).tags;
+    let relative_date: number = JSON.parse(data.function.arguments)?.datum || 0;
 
     // Log the parsed data
     // console.log("Parsed Data:", { note_title, content, tags });
 
+    let date = new Date();
+    date.setDate(new Date().getDate() + relative_date);
+
     // Format: YYYY-MM-DD
-    const noteTitle =
-      "Journal/" + new Date().toISOString().split("T")[0] + ".md";
+    const noteTitle = "Journal/" + date.toISOString().split("T")[0] + ".md";
     // console.log("Generated Note Title:", noteTitle);
 
     let formattedTags = "";
@@ -229,6 +279,9 @@ stream.on("toolCallDone", async (data) => {
       // console.log("Formatted Tags:", formattedTags);
     }
 
+    console.log(note_title);
+    console.log(noteTitle);
+
     const metadata =
       [
         `# Gespeichert: ${note_title}`,
@@ -237,7 +290,7 @@ stream.on("toolCallDone", async (data) => {
         `- **Eingabe: "${PROMPT}"**`,
       ].join("\n") + "\n\n";
 
-    // console.log("Generated Metadata:", metadata);
+    console.log("Generated Metadata:", metadata);
 
     const doesNoteExist =
       await $`ls ~/Documents/Marius\'\ Remote\ Vault/ | grep ${noteTitle}`.quiet();
@@ -245,11 +298,11 @@ stream.on("toolCallDone", async (data) => {
     // console.log("Does Note Exist:", doesNoteExist.stdout ? "Yes" : "No");
 
     if (!doesNoteExist.stdout) {
-      // console.log("Creating a new note...");
+      console.log("Creating a new note...");
       await $`touch ~/Documents/Marius\'\ Remote\ Vault/${noteTitle}`;
     }
 
-    // console.log("Note creation/check completed. Preparing to save content...");
+    console.log("Note creation/check completed. Preparing to save content...");
 
     handleMessage(
       client.beta.threads.runs.submitToolOutputsStream(thread_id, run.id, {
@@ -261,18 +314,18 @@ stream.on("toolCallDone", async (data) => {
         ],
       }),
       async (message) => {
-        // console.log("Tool output submitted. Message:", message);
+        console.log("Tool output submitted. Message:", message);
 
         const gptResponse = message
           ? [`\n## Totoro's Take`, `${message}`].join("\n")
           : "";
 
-        // console.log("Generated GPT Response:", gptResponse);
+        console.log("Generated GPT Response:", gptResponse);
 
         // Include tags and message content in the note
         const noteContent = `${content}${gptResponse}`;
 
-        // console.log("Final Note Content:", noteContent);
+        console.log("Final Note Content:", noteContent);
 
         await $`echo "${metadata}${noteContent}" >> ~/Documents/Marius\'\ Remote\ Vault/${noteTitle}`;
         console.log(`Totoro: "${message}"`);

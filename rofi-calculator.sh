@@ -54,13 +54,13 @@ if [ ! -z "$@" ]; then
     notify-send "There is no short answer. I'm opening the website for you..."
     coproc (xdg-open "https://wolframalpha.com/input?i=$*" > /dev/null 2>&1)
     killall rofi
-    GPT_RESPONSE=$(/home/mn/.local/share/mise/installs/bun/1.1.34/bin/bun run /home/mn/code/personal-stuff/totoro/index.ts "Im currently looking at the answer to '$*' on WolframAlpha. Do not query it yourself. Just tell me something about it.")
+    GPT_RESPONSE=$(/home/mn/.local/share/mise/installs/bun/latest/bin/bun run /home/mn/code/personal-stuff/totoro/index.ts "Im currently looking at the answer to '$*' on WolframAlpha. Do not query it yourself. Just tell me something about it.")
     dunstify -h string:x-dunst-stack-tag:totoro-assistant -a Totoro -t 0 "$GPT_RESPONSE"
     exit 0
   elif [ "$RESPONSE" == "Wolfram|Alpha did not understand your input" ]; then
     notify-send "Wait, let me query OpenAI..."
     killall rofi
-    GPT_RESPONSE=$(/home/mn/.local/share/mise/installs/bun/1.1.34/bin/bun run /home/mn/code/personal-stuff/totoro/index.ts "$*")
+    GPT_RESPONSE=$(/home/mn/.local/share/mise/installs/bun/latest/bin/bun run /home/mn/code/personal-stuff/totoro/index.ts "$*")
     dunstify -h string:x-dunst-stack-tag:totoro-assistant -a Totoro -t 0 "$GPT_RESPONSE"
     # coproc (xdg-open "https://chatgpt.com/?q=$*" > /dev/null 2>&1)
     # exit 0
