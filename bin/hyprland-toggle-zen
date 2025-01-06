@@ -1,0 +1,18 @@
+#!/usr/bin/env zsh
+
+toggle_hypr_zen_mode() {
+  local gaps_out=$(hyprctl getoption general:gaps_out -j | jq '.custom')
+
+  if [[ $gaps_out == "\"8 8 8 8\"" ]]; then
+    killall waybar 2>/dev/null
+    hyprctl keyword general:gaps_in 0
+    hyprctl keyword general:gaps_out 0
+  else
+    hyprctl keyword general:gaps_in 4
+    hyprctl keyword general:gaps_out 8
+    waybar
+  fi
+}
+
+toggle_hypr_zen_mode
+

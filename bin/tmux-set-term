@@ -1,0 +1,4 @@
+#!/usr/bin/env zsh
+
+export TERM=xterm-256color
+ssh mn@mueller.uberspace.de
