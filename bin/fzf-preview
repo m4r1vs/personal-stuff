@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+
+dim=${FZF_PREVIEW_COLUMNS}x${FZF_PREVIEW_LINES}
+input=${1/#\~\//$HOME/}
+type=$(file --brief --dereference --mime -- "$input")
+
+# echo "File: $input"
+# echo "Type: $type"
+
+if [[ "$type" =~ "cannot" ]]; then
+  echo "$(man $input | bat -p -lman --color=always)"
+elif [[ $type =~ inode/ ]] then
+  lsd --git --icon=always --color=always --tree --depth=2 "$input"
+elif [[ $type =~ application/zip ]]; then
+    unzip -l "$input"
+elif [[ $type =~ image/ ]]; then
+  chafa -s "$dim" "$input"
+elif [[ $type =~ application/pdf ]]; then
+  pdftotext "$input" - | head -n 30
+else
+  if [[ $type =~ =binary ]]; then
+    file "$1"
+  else
+    bat --style="${BAT_STYLE:-numbers}" --color=always --pager=never -- "$input"
+  fi
+fi
+
