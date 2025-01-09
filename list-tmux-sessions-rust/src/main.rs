@@ -44,52 +44,43 @@ fn get_tmux_session_id() -> Result<i32, String> {
 fn set_output_string(
     session: &TmuxSession,
     pane_path: &str,
-    pane_title: &str,
     pane_cmd: &str,
     pane_index: usize,
     color: &str,
     output: &Mutex<Vec<String>>,
 ) {
     let delim = if pane_index == 1 { "" } else { DELIM };
-    let mut app_title = pane_title.to_string();
-    let mut app_icon = "".to_string();
 
     let mut modified_pane_path = pane_path.to_string();
 
     // Check if pane title is the hostname, if not, we have a program that dynamically set the
     // title of the window.
 
-    if pane_title == HOSTNAME || pane_title.is_empty() {
-        app_title = pane_cmd.to_string();
+    let mut app_title = pane_cmd.to_string();
 
-        //TODO: replace home path with env variable at compile time
-        modified_pane_path = modified_pane_path.replace("/home/mn", "~");
+    //TODO: replace home path with env variable at compile time
+    modified_pane_path = modified_pane_path.replace("/home/mn", "~");
 
-        let folder_icon = if session.id == get_tmux_session_id().unwrap() {
-            " "
-        } else {
-            " "
-        };
-
-        // We don't need to know we're running zsh, replace it with folder icon
-        // TODO: replace zsh with current shell at compile time
-        if !app_title.contains("zsh") {
-            app_title = format!("{} @ ", app_title);
-            app_title = app_title.replace("lazygit @ ", "󰊢  ");
-        } else {
-            app_title = app_title.replace("zsh", folder_icon);
-        }
+    let folder_icon = if session.id == get_tmux_session_id().unwrap() {
+        " "
     } else {
-        modified_pane_path = "".to_string();
-        if app_title.contains(" - NVIM") {
-            app_title = app_title.replace(" - NVIM", "");
-            app_icon = " ".to_string();
-        }
+        " "
+    };
+
+    // We don't need to know we're running zsh, replace it with folder icon
+    // TODO: replace zsh with current shell at compile time
+    if app_title.contains("zsh") {
+        app_title = app_title.replace("zsh", folder_icon);
+    } else {
+        app_title = format!("{} @ ", app_title);
+        app_title = app_title.replace("lazygit @ ", " ");
+        app_title = app_title.replace("nvim @ ", " ");
+        app_title = app_title.replace("ssh @ ", "󱂇 ");
     }
 
     let output_string = format!(
-        "{}<span color=\"{}\">{}{}{}</span>",
-        delim, color, app_icon, app_title, modified_pane_path
+        "{}<span color=\"{}\">{}{}</span>",
+        delim, color, app_title, modified_pane_path
     );
 
     output.lock().unwrap()[session.local_id].push_str(&output_string);
@@ -113,12 +104,9 @@ fn set_tmux_panes(session: &TmuxSession, window_id: i32, output: &Arc<Mutex<Vec<
         for pane in panes.iter() {
             let details: Vec<&str> = pane.split(';').collect();
             if details.len() == 4 {
-                let (pane_path, pane_cmd, pane_title, pane_index_str) =
-                    (details[0], details[1], details[2], details[3]);
+                let (pane_path, pane_cmd, pane_index_str) = (details[0], details[1], details[3]);
                 let pane_index = pane_index_str.parse::<usize>().unwrap_or(0);
-                set_output_string(
-                    session, pane_path, pane_title, pane_cmd, pane_index, color, output,
-                );
+                set_output_string(session, pane_path, pane_cmd, pane_index, color, output);
             }
         }
     }
