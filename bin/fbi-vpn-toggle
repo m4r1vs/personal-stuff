@@ -1,0 +1,26 @@
+#!/bin/bash
+
+VPN_NAME="FBI (PPTP)"
+
+# Check if the VPN is currently active
+VPN_ACTIVE=$(nmcli connection show --active | grep "$VPN_NAME")
+
+if [ -n "$VPN_ACTIVE" ]; then
+  echo "VPN '$VPN_NAME' is currently active. Toggling it off."
+  nmcli connection down "$VPN_NAME"
+  if [ $? -eq 0 ]; then
+    echo "VPN '$VPN_NAME' has been deactivated."
+  else
+    echo "Failed to deactivate VPN '$VPN_NAME'."
+    exit 1
+  fi
+else
+  echo "VPN '$VPN_NAME' is not active. Toggling it on."
+  nmcli connection up "$VPN_NAME"
+  if [ $? -eq 0 ]; then
+    echo "VPN '$VPN_NAME' has been activated."
+  else
+    echo "Failed to activate VPN '$VPN_NAME'."
+    exit 1
+  fi
+fi

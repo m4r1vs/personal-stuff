@@ -1,0 +1,10 @@
+#!/bin/bash
+
+url="$1"
+notify-send "Opening $url"
+if echo "$url" | grep -q "youtube.com/watch\|youtu.be"; then
+    mpv --wayland-app-id=mpv-youtube --ytdl-format="bestvideo[height<=?1080]+bestaudio/best" "$url" >/dev/null &
+else
+    # For non-YouTube URLs, use the default browser
+    brave --new-window "$url"
+fi

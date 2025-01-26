@@ -1,4 +1,4 @@
 #!/bin/bash
 
-export EDITOR=/home/mn/.local/bin/lvim
+export EDITOR=/usr/bin/nvim
 matterhorn
