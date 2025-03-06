@@ -1,0 +1,3 @@
+#!/bin/bash
+
+pgrep -f "obsidian" || obsidian
